@@ -1,4 +1,5 @@
-import { GraphQLServer } from 'graphql-yoga'
+import { GraphQLServer } from 'graphql-yoga';
+import uuidv4 from 'uuid/v4';
 //realtionships
 
 //array of users
@@ -68,6 +69,13 @@ const typeDefs = `
         published:Boolean!
         author: User!
     }
+
+    type Mutation{
+        createNewUser(name: String!, email: String!, age: Int): User!
+        deleteUser(id: ID!): User!
+        updateUser(id: ID!, name: String, email: String, age: Int): User!
+        createPost(title: String!, body: String!, published: Boolean!, author: ID!): Post!
+    }
 `
 
 const resolvers = {
@@ -119,7 +127,80 @@ const resolvers = {
                 return post.author === parent.id
             })
         }
-    }
+    },
+    Mutation:{
+        createNewUser(parent,args,ctx,info){
+            const isEmailExists = users.some((user) => user.email === args.email)
+            if(isEmailExists){
+              throw new Error('Email already Taken')
+            }
+ 
+            const user = {
+                id:uuidv4(),
+                name:args.name,
+                email:args.email,
+                age:args.age
+            }
+            users.push(user)
+ 
+            return user
+         },
+        updateUser(parent, args, ctx, info){
+            const user = users.find((user) => user.id === args.id)
+            if(!user){
+                throw new Error('User does not exist!')
+            }
+    
+            if(typeof args.email === 'string'){
+                const isEmailExists = db.users.some((user) => user.email === args.email)
+                if(isEmailExists){
+                    throw new Error('Email already Taken')
+                }
+                user.email = args.email
+            }
+    
+            if(typeof args.name === 'string'){
+                user.name = args.name
+            }
+    
+            if(typeof args.age !== 'undefined'){
+                user.age = args.age
+            }
+    
+            return user    
+    },
+    deleteUser(parent,args,ctx,info){
+        const isUserExists = users.findIndex((user)=> user.id === args.author)
+
+        if(!isUserExists){
+            throw new Error('User does not exist!')
+        }
+        //splice will return the removed items from the array object
+        const userdeleted = users.splice(isUserExists, 1)
+       return userdeleted[0]
+    },
+    createPost(parent,args,ctx,info){
+        const userExists = users.some((user)=> user.id === args.author)
+
+        if(!userExists){
+            throw new Error('User does not exist!')
+        }
+        
+        //use this
+        const post = {
+            id: uuidv4(),
+            title: args.title,
+            body: args.body,
+            published: args.published,
+            author:args.author
+        }
+        
+
+        posts.push(post)
+        return post
+
+}
+}
 }
 
 const server  = new GraphQLServer({
@@ -130,7 +211,7 @@ const server  = new GraphQLServer({
 // since the property name matches up with a variable with the same name, i am using object property shorthand
 
 const options = {
-    port: 4203 
+    port: 8005   
   }
 
 server.start(options, ({ port }) =>
