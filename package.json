@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon src/mutations.js --exec babel-node"
+    "start": "nodemon src/Subscription.js --exec babel-node"
   },
   "keywords": [],
   "author": "",
