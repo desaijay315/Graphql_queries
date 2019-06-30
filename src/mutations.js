@@ -170,13 +170,13 @@ const resolvers = {
             return user    
     },
     deleteUser(parent,args,ctx,info){
-        const isUserExists = users.findIndex((user)=> user.id === args.author)
+        const userIndex = users.findIndex((user)=> user.id === args.author)
 
-        if(!isUserExists){
+        if(!userIndex || userIndex < 0){
             throw new Error('User does not exist!')
         }
         //splice will return the removed items from the array object
-        const userdeleted = users.splice(isUserExists, 1)
+        const userdeleted = users.splice(userIndex, 1)
        return userdeleted[0]
     },
     createPost(parent,args,ctx,info){
